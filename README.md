@@ -1,8 +1,5 @@
-# stoggle — 주식 종목 인사이트 플랫폼
+# stoogle — 주식 종목 인사이트 플랫폼
 
-> 어떤 기업을 검색해도 동일한 품질의 인사이트를 제공하는 "주식 전용 구글"
-
----
 
 ## 프로젝트 구조
 
@@ -58,9 +55,7 @@ stoggle/
 
 ---
 
-## 빠른 시작 (Claude Code에서 실행)
-
-### 1단계 — 프론트엔드 실행
+## 프론트 실행 방법
 
 ```bash
 cd stoggle/frontend
@@ -69,55 +64,49 @@ npm start
 # → http://localhost:3000
 ```
 
-백엔드 없이도 mockData.js로 UI 전체를 확인할 수 있습니다.
 
 ---
 
-### 2단계 — 백엔드 실행
+### 백엔드 실행 방법
 
 ```bash
 cd stoggle/backend
 
-# 가상환경 생성
 python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 
-# 의존성 설치
 pip install -r requirements.txt
 
-# 환경변수 설정
 cp .env.example .env
 # .env 파일에서 OPENAI_API_KEY, DART_API_KEY 입력
 
-# DB 테이블 생성
 python models/db_models.py
 
-# 서버 시작
 uvicorn main:app --reload --port 8000
 # → http://localhost:8000/docs  (Swagger UI 자동 생성)
 ```
 
 ---
 
-### 3단계 — Celery 자동화 (선택)
+### Celery 자동화 (option)
 
-Redis가 필요합니다.
+Redis 필요
 
 ```bash
-# Redis 실행 (Docker)
+# Redis 실행 (Docker에서 실행)
 docker run -d -p 6379:6379 redis:7
 
 # Celery 워커 실행
 cd stoggle/backend
 celery -A tasks worker --loglevel=info
 
-# Celery Beat 스케줄러 실행 (별도 터미널)
+# Celery Beat 스케줄러 실행 
 celery -A tasks beat --loglevel=info
 ```
 
 ---
 
-## API 엔드포인트
+## API 명세
 
 | Method | URL | 설명 |
 |--------|-----|------|
@@ -127,21 +116,4 @@ celery -A tasks beat --loglevel=info
 | GET | `/api/v1/relations/{ticker}` | 연관 기업 관계도 |
 | GET | `/health` | 서버 상태 확인 |
 
----
 
-## 외부 API 키 발급
-
-| 서비스 | 발급 URL | 용도 |
-|--------|---------|------|
-| OpenAI | https://platform.openai.com | LLM 요약·관계 추출 |
-| DART | https://opendart.fss.or.kr | 공시 데이터 |
-
----
-
-## 개발 우선순위
-
-1. **Phase 1** — `npm start`로 프론트 UI 확인 (mockData 사용)
-2. **Phase 2** — FastAPI 백엔드 실행 + `/api/v1/search` 연동
-3. **Phase 3** — 뉴스·주가 실데이터 연결
-4. **Phase 4** — LLM 요약 + 관계 그래프 자동화
-5. **Phase 5** — Celery로 전종목 자동 업데이트
