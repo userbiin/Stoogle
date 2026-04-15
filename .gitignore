@@ -16,6 +16,7 @@ build/
 .env
 .env.local
 .env.*.local
+stoggle/frontend/.env
 
 # 데이터베이스
 *.db
