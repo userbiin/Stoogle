@@ -28,6 +28,7 @@ redis==5.0.3
 
 # Utilities
 python-dotenv==1.0.1
+nest-asyncio==1.6.0
 pydantic==2.6.3
 pydantic-settings==2.2.1
 dart-fss==0.4.4

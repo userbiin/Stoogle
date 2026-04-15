@@ -111,19 +111,70 @@ def compute_relations(
     }
 
 
-def compute_impact(ticker: str) -> list[ImpactItem]:
+def compute_correlations_only(ticker: str) -> int:
     """
-    영향 종목 추론 (간단한 섹터 기반 규칙)
+    단일 종목에 대해 후보 종목들과의 상관계수만 계산하고 캐싱한다.
+    관계 유형 재분류·노드 생성 없이 수치만 갱신하므로 매일 실행에 적합.
+    반환값: 상관계수를 계산한 후보 종목 수
     """
-    sector_impacts = {
-        "005930": [
-            ImpactItem(ticker="009150", name="삼성전기", impact="positive", reason="부품 공급망 수혜"),
-            ImpactItem(ticker="028260", name="삼성물산", impact="positive", reason="그룹사 호재 동반 반영"),
-            ImpactItem(ticker="086520", name="에코프로", impact="negative", reason="반도체 투자 확대 → 배터리 자금 이동"),
-        ],
-        "000660": [
-            ImpactItem(ticker="005930", name="삼성전자", impact="negative", reason="메모리 직접 경쟁"),
-            ImpactItem(ticker="006400", name="삼성SDI", impact="neutral", reason="섹터 자금 이동 가능성"),
-        ],
-    }
-    return sector_impacts.get(ticker, [])
+    candidate_tickers = [t for t in MAJOR_TICKERS if t != ticker]
+    base_prices = _fetch_close_prices(ticker)
+    if base_prices is None:
+        return 0
+
+    count = 0
+    for cand in candidate_tickers:
+        cand_prices = _fetch_close_prices(cand)
+        if cand_prices and len(cand_prices) == len(base_prices):
+            _corr = float(np.corrcoef(base_prices, cand_prices)[0, 1])  # noqa: F841
+            count += 1
+
+    return count
+
+
+async def compute_impact(ticker: str) -> list[ImpactItem]:
+    """
+    영향 종목 추론.
+
+    흐름:
+      1. 해당 종목의 최신 뉴스 수집 (news_service)
+      2. 상관계수 기반 관계사 목록 조회 (compute_relations)
+      3. LLM 에이전트가 뉴스를 읽고 관계사 중 영향받을 종목 판단
+      4. LLM 미사용 환경(API 키 없음)이면 빈 리스트 반환
+    """
+    from services.news_service import fetch_news, rank_news
+    from agents.news_agent import run_impact_analysis
+
+    # 1. 뉴스 수집
+    news_items = await fetch_news(ticker)
+    ranked = rank_news(news_items)
+    news_titles = [n.title for n in ranked[:10]]
+
+    # 2. 관계사 목록 확보
+    relation_data = compute_relations(ticker)
+    related = [
+        {"ticker": r.ticker, "name": r.name, "reason": r.reason}
+        for r in relation_data.get("related_companies", [])
+    ]
+
+    if not news_titles or not related:
+        return []
+
+    # 3. LLM 에이전트 호출
+    company_name = MAJOR_TICKERS.get(ticker, (ticker, ""))[0]
+    raw_items = await run_impact_analysis(
+        ticker=ticker,
+        company_name=company_name,
+        news_titles=news_titles,
+        related_companies=related,
+    )
+
+    return [
+        ImpactItem(
+            ticker=item["ticker"],
+            name=item["name"],
+            impact=item["impact"],
+            reason=item["reason"],
+        )
+        for item in raw_items
+    ]
