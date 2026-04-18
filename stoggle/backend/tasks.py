@@ -69,8 +69,8 @@ app.conf.beat_schedule = {
     },
 }
 
-# 코스피 200 대표 종목 (Tier 1 — 1분 단위 갱신)
-KOSPI200_TICKERS = [
+# KOSPI 200 구성 종목 — pykrx로 동적 조회, 실패 시 아래 fallback 사용
+_KOSPI200_FALLBACK = [
     "005930", "000660", "035420", "051910", "207940",
     "035720", "066570", "005380", "000270", "068270",
     "028260", "105560", "055550", "032830", "003550",
@@ -78,6 +78,26 @@ KOSPI200_TICKERS = [
     "017670", "034730", "009150", "010950", "000810",
     "011200", "034020", "033780", "003490", "316140",
 ]
+
+
+def _load_kospi200() -> list[str]:
+    """
+    pykrx에서 KOSPI 200 실시간 구성 종목을 조회한다.
+    조회 실패 시 fallback 목록을 반환한다.
+    """
+    try:
+        from pykrx import stock as pykrx_stock
+        today = datetime.today().strftime("%Y%m%d")
+        # KOSPI 200 인덱스 코드: 1028
+        tickers = pykrx_stock.get_index_portfolio_deposit_file("1028", date=today)
+        if tickers and len(tickers) > 10:
+            return list(tickers)
+    except Exception as e:
+        logger.warning(f"KOSPI200 구성 종목 조회 실패 — fallback 사용: {e}")
+    return _KOSPI200_FALLBACK
+
+
+KOSPI200_TICKERS = _load_kospi200()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -234,7 +254,8 @@ def fetch_dart_filings(self):
         for ticker in KOSPI200_TICKERS:
             try:
                 # 종목 코드로 최근 공시 조회
-                filings = dart.filings.search(corp_code=ticker, bgn_de="20240101", pblntf_ty="A")
+                bgn_de = (datetime.today() - timedelta(days=30)).strftime("%Y%m%d")
+                filings = dart.filings.search(corp_code=ticker, bgn_de=bgn_de, pblntf_ty="A")
                 results[ticker] = len(filings) if filings else 0
             except Exception as e:
                 logger.warning(f"공시 수집 실패 ({ticker}): {e}")
