@@ -14,20 +14,6 @@ except ImportError:
 from models.schemas import RelationNode, RelationLink, RelatedCompany, ImpactItem
 
 
-# 주요 종목 사전 (fallback용)
-MAJOR_TICKERS = {
-    "005930": ("삼성전자", "KOSPI"),
-    "000660": ("SK하이닉스", "KOSPI"),
-    "035420": ("NAVER", "KOSPI"),
-    "051910": ("LG화학", "KOSPI"),
-    "207940": ("삼성바이오로직스", "KOSPI"),
-    "035720": ("카카오", "KOSPI"),
-    "066570": ("LG전자", "KOSPI"),
-    "003550": ("LG", "KOSPI"),
-    "005380": ("현대차", "KOSPI"),
-    "000270": ("기아", "KOSPI"),
-}
-
 RELATION_TYPES = {
     (0.8, 1.0): "경쟁",
     (0.6, 0.8): "협력",
@@ -41,6 +27,11 @@ def _get_relation_type(corr: float) -> str:
         if lo <= corr < hi:
             return rtype
     return "관심"
+
+
+def _get_name(ticker: str, registry: dict) -> str:
+    """레지스트리에서 종목명 조회. 없으면 ticker 코드 반환."""
+    return registry.get(ticker, {}).get("name", ticker)
 
 
 def _fetch_close_prices(ticker: str, days: int = 90) -> Optional[list[float]]:
@@ -63,10 +54,17 @@ def compute_relations(
 ) -> dict:
     """
     주어진 ticker와 후보 종목들 간의 상관계수를 계산하여 관계 데이터를 반환.
-    pykrx 미사용 시 사전 정의된 데이터 반환.
+
+    candidate_tickers 미지정 시 레지스트리 전종목 중 KOSPI200 기준 상위 9개를 사용.
+    종목명은 Redis 레지스트리에서 동적으로 조회한다.
     """
+    from services.stock_service import get_or_build_registry
+    from tasks import KOSPI200_TICKERS
+
+    registry = get_or_build_registry()
+
     if candidate_tickers is None:
-        candidate_tickers = [t for t in MAJOR_TICKERS if t != ticker][:9]
+        candidate_tickers = [t for t in KOSPI200_TICKERS if t != ticker][:9]
 
     base_prices = _fetch_close_prices(ticker)
 
@@ -74,11 +72,11 @@ def compute_relations(
     links = []
     related = []
 
-    center_name = MAJOR_TICKERS.get(ticker, (ticker, ""))[0]
+    center_name = _get_name(ticker, registry)
     nodes.append(RelationNode(id=ticker, name=center_name, group=0, size=40))
 
     for i, cand in enumerate(candidate_tickers):
-        cand_name = MAJOR_TICKERS.get(cand, (cand, ""))[0]
+        cand_name = _get_name(cand, registry)
         size = max(10, 28 - i * 2)
 
         if base_prices is not None:
@@ -113,11 +111,13 @@ def compute_relations(
 
 def compute_correlations_only(ticker: str) -> int:
     """
-    단일 종목에 대해 후보 종목들과의 상관계수만 계산하고 캐싱한다.
+    단일 종목에 대해 KOSPI200 후보 종목들과의 상관계수만 계산한다.
     관계 유형 재분류·노드 생성 없이 수치만 갱신하므로 매일 실행에 적합.
     반환값: 상관계수를 계산한 후보 종목 수
     """
-    candidate_tickers = [t for t in MAJOR_TICKERS if t != ticker]
+    from tasks import KOSPI200_TICKERS
+
+    candidate_tickers = [t for t in KOSPI200_TICKERS if t != ticker]
     base_prices = _fetch_close_prices(ticker)
     if base_prices is None:
         return 0
@@ -143,7 +143,11 @@ async def compute_impact(ticker: str) -> list[ImpactItem]:
       4. LLM 미사용 환경(API 키 없음)이면 빈 리스트 반환
     """
     from services.news_service import fetch_news, rank_news
+    from services.stock_service import get_or_build_registry
     from agents.news_agent import run_impact_analysis
+
+    registry = get_or_build_registry()
+    company_name = _get_name(ticker, registry)
 
     # 1. 뉴스 수집
     news_items = await fetch_news(ticker)
@@ -161,7 +165,6 @@ async def compute_impact(ticker: str) -> list[ImpactItem]:
         return []
 
     # 3. LLM 에이전트 호출
-    company_name = MAJOR_TICKERS.get(ticker, (ticker, ""))[0]
     raw_items = await run_impact_analysis(
         ticker=ticker,
         company_name=company_name,
