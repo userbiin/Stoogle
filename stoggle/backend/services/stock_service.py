@@ -44,12 +44,10 @@ def _n_days_ago(n: int) -> str:
 def build_ticker_registry() -> dict:
     """
     KRX 전종목 레지스트리를 pykrx로 구축한다.
-    레지스트리 구조:
-      {
-        "005930": {"ticker": "005930", "name": "삼성전자", "market": "KOSPI"},
-        ...
-      }
-    약 2,500~3,000 종목 처리 — 최초 1회 또는 Celery 주간 태스크로만 호출.
+
+    1차: get_market_ticker_list()로 전종목 조회
+    2차(fallback): 리스트 API 실패 시 KOSPI200_FALLBACK 종목을
+                   get_market_ticker_name()으로 개별 조회
     """
     if not PYKRX_AVAILABLE:
         return {}
@@ -62,7 +60,7 @@ def build_ticker_registry() -> dict:
             tickers = pykrx_stock.get_market_ticker_list(today, market=market)
         except Exception as e:
             logger.warning(f"{market} 종목 리스트 조회 실패: {e}")
-            continue
+            tickers = []
 
         for ticker in tickers:
             try:
@@ -70,6 +68,17 @@ def build_ticker_registry() -> dict:
             except Exception:
                 name = ticker
             registry[ticker] = {"ticker": ticker, "name": name, "market": market}
+
+    # get_market_ticker_list 가 빈 결과를 반환하는 환경(KRX API 제한 등)에 대한 fallback
+    if not registry:
+        logger.warning("전종목 리스트 조회 불가 — KOSPI200 fallback으로 레지스트리 구축")
+        from tasks import _KOSPI200_FALLBACK
+        for ticker in _KOSPI200_FALLBACK:
+            try:
+                name = pykrx_stock.get_market_ticker_name(ticker)
+            except Exception:
+                name = ticker
+            registry[ticker] = {"ticker": ticker, "name": name, "market": "KOSPI"}
 
     logger.info(f"종목 레지스트리 구축 완료: {len(registry)}종목")
     return registry
