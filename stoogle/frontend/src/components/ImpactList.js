@@ -81,6 +81,12 @@ const styles = {
     lineHeight: '1.75',
     color: '#1a3c6e',
   },
+  emptyState: {
+    textAlign: 'center',
+    padding: '24px 0 8px',
+    color: 'var(--color-text-muted)',
+    fontSize: '13px',
+  },
 };
 
 function buildInsightText(items) {
@@ -106,50 +112,54 @@ function buildInsightText(items) {
 export default function ImpactList({ items = [] }) {
   const navigate = useNavigate();
 
-  if (!items.length) return null;
-
   const insightText = buildInsightText(items);
 
   return (
     <div style={styles.card}>
       <div style={styles.header}>
         <span style={styles.title}>뉴스로 주가 변동 가능성 있는 종목</span>
-        <span style={styles.subtitle}>최근 뉴스 분석 기반</span>
+        <span style={styles.subtitle}>관계사 기반 영향 분석</span>
       </div>
 
-      <div style={styles.chipRow}>
-        {items.map((item) => {
-          const isPos = item.impact === 'positive';
-          return (
-            <span
-              key={item.ticker}
-              style={{
-                ...styles.chip,
-                background: isPos ? 'var(--color-positive-bg)' : 'var(--color-negative-bg)',
-                color: isPos ? 'var(--color-positive)' : 'var(--color-negative)',
-                borderColor: isPos ? '#a8d5b5' : '#f5b7b5',
-              }}
-              onClick={() => navigate(`/company/${item.ticker}`)}
-              onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.75')}
-              onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
-              title={item.reason}
-            >
-              <span style={styles.chipArrow}>{isPos ? '▲' : '▼'}</span>
-              {item.name}
-              <span style={styles.chipTicker}>{item.ticker}</span>
-            </span>
-          );
-        })}
-      </div>
+      {items.length === 0 ? (
+        <div style={styles.emptyState}>크게 변동 가능성 있는 종목이 없습니다</div>
+      ) : (
+        <>
+          <div style={styles.chipRow}>
+            {items.map((item) => {
+              const isPos = item.impact === 'positive';
+              return (
+                <span
+                  key={item.ticker}
+                  style={{
+                    ...styles.chip,
+                    background: isPos ? 'var(--color-positive-bg)' : 'var(--color-negative-bg)',
+                    color: isPos ? 'var(--color-positive)' : 'var(--color-negative)',
+                    borderColor: isPos ? '#a8d5b5' : '#f5b7b5',
+                  }}
+                  onClick={() => navigate(`/company/${item.ticker}`)}
+                  onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.75')}
+                  onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+                  title={item.reason}
+                >
+                  <span style={styles.chipArrow}>{isPos ? '▲' : '▼'}</span>
+                  {item.name}
+                  <span style={styles.chipTicker}>{item.ticker}</span>
+                </span>
+              );
+            })}
+          </div>
 
-      <div style={styles.divider} />
+          <div style={styles.divider} />
 
-      <div style={styles.insightBox}>
-        <div style={styles.insightHeader}>
-          <span style={styles.insightLabel}>AI 인사이트</span>
-        </div>
-        <div style={styles.insightText}>{insightText}</div>
-      </div>
+          <div style={styles.insightBox}>
+            <div style={styles.insightHeader}>
+              <span style={styles.insightLabel}>AI 인사이트</span>
+            </div>
+            <div style={styles.insightText}>{insightText}</div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
