@@ -120,7 +120,6 @@ Stoogle
 │           ├── pages/           # MainPage · SearchResultsPage · CompanyDetailPage
 │           └── components/      # PriceChart · RelationGraph · NewsSection · ImpactList
 ├── docs/                        # README 이미지 · 다이어그램 원본
-├── readme/                      # 모듈별 상세 설계 문서
 └── docker-compose.yml           # PostgreSQL · Prometheus · Grafana · Loki
 ```
 
@@ -173,14 +172,3 @@ REACT_APP_USE_MOCK=false npm start           # http://localhost:3000
 ```
 
 </details>
-
-<br>
-
-## Docs
-
-| 문서 | 내용 |
-|---|---|
-| [News_README.md](readme/News_README.md) | 뉴스 영향 분석 모듈 설계 |
-| [Relation_README.md](readme/Relation_README.md) | 기업 관계 모듈 설계 |
-| [EVALUATION.md](readme/EVALUATION.md) | 백테스트 · 평가 체계 |
-| [MONITORING.md](readme/MONITORING.md) | 관측성 · Prometheus 설정 |
