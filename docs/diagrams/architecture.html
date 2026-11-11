@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<script>if(location.hash==="#dark")document.documentElement.classList.add("dark")</script><style>*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:transparent;--fg:#1f2328;--muted:#59636e;--muted2:#818b98;--border:#d1d9e0;--card:#ffffff;--soft:#f6f8fa;--title:#0969da;--arrow:#818b98;
+--purple:#8250df;--green:#1a7f37;--blue:#0969da;
+--l-bd:#d4a72c;--l-bg:#fff8c5;--l-tag:#f5e0a0;--l-tx:#7d4e00;
+--a-bd:#d97757;--a-bg:#fdf1ec;--a-tag:#f6d0c0;--a-tx:#9a3412;
+--e-bd:#a98bf0;--e-bg:#f5f0ff;--e-tag:#e0d4fc;--e-tx:#5a32a3;
+--u-bd:#9ec5fe;--u-bg:#ddf4ff;--num:#1f2328;--numfg:#fff}
+html.dark{--fg:#e6edf3;--muted:#9198a1;--muted2:#7d8590;--border:#3d444d;--card:rgba(255,255,255,.035);--soft:rgba(255,255,255,.06);--title:#4493f8;--arrow:#7d8590;
+--purple:#ab7df8;--green:#3fb950;--blue:#4493f8;
+--l-bd:#bb8009;--l-bg:rgba(187,128,9,.14);--l-tag:rgba(187,128,9,.30);--l-tx:#e3b341;
+--a-bd:#c4613d;--a-bg:rgba(219,109,74,.13);--a-tag:rgba(219,109,74,.30);--a-tx:#f0a07e;
+--e-bd:#8957e5;--e-bg:rgba(137,87,229,.15);--e-tag:rgba(137,87,229,.35);--e-tx:#c9b0ff;
+--u-bd:#1f6feb;--u-bg:rgba(56,139,253,.14);--num:#e6edf3;--numfg:#0d1117}
+body{word-break:keep-all;width:1120px;background:var(--bg);font-family:"Inter","Noto Sans CJK KR",sans-serif;color:var(--fg);-webkit-font-smoothing:antialiased}
+.arw path{stroke:var(--arrow)}
+.wrap{padding:36px 40px 36px}
+.title{display:flex;align-items:baseline;gap:12px;margin-bottom:24px}
+.title h1{font-size:30px;font-weight:700;letter-spacing:-.5px;color:var(--title)}
+.title span{font-size:17px;color:var(--muted)}
+.layer{display:flex;gap:16px;align-items:stretch}
+.lbl{width:118px;flex:none;display:flex;flex-direction:column;justify-content:center;font-size:12.5px;font-weight:700;letter-spacing:1.2px;color:var(--muted);line-height:1.5}
+.lbl small{display:block;font-size:12px;font-weight:500;letter-spacing:0;color:var(--muted2);margin-top:2px}
+.cards{flex:1;display:flex;gap:12px;align-items:center}
+.card{flex:1;border:1.5px solid var(--border);border-radius:12px;padding:13px 15px;background:var(--card);align-self:stretch}
+.card b{display:block;font-size:17px;font-weight:650;margin-bottom:3px}
+.card p{font-size:14px;color:var(--muted);line-height:1.45}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;margin-top:8px}
+.src .card{background:var(--soft)}
+.job .card{border-left:4px solid var(--purple)}
+.store .card{border-left:4px solid var(--green)}
+.serve .card{border-left:4px solid var(--blue)}
+.local{border-color:var(--l-bd)!important;background:var(--l-bg)!important}.local .tag{background:var(--l-tag);color:var(--l-tx)}
+.api{border-color:var(--a-bd)!important;background:var(--a-bg)!important}.api .tag{background:var(--a-tag);color:var(--a-tx)}
+.emb{background:var(--e-bg)!important;border-color:var(--e-bd)!important}.emb .tag{background:var(--e-tag);color:var(--e-tx)}
+.user{background:var(--u-bg)!important;border-color:var(--u-bd)!important}
+.down{display:flex;padding-left:134px;justify-content:center;height:34px;align-items:center}
+.harrow{flex:none;width:22px;display:flex;align-items:center;justify-content:center}
+.ai .cards{gap:8px}
+.obs{margin-top:26px;display:flex;align-items:center;gap:12px;border:1.5px solid var(--border);border-radius:12px;padding:12px 16px;background:var(--soft);flex-wrap:wrap}
+.obs .h{font-size:12.5px;font-weight:700;letter-spacing:1.2px;color:var(--muted);margin-right:4px}
+.chip{font-size:14px;font-weight:600;padding:4px 11px;border-radius:8px;background:var(--card);border:1px solid var(--border)}
+.obs .note{font-size:13.5px;color:var(--muted);margin-left:auto}
+</style></head><body><div class="wrap">
+<div class="title"><h1>Stoogle</h1><span>System Architecture</span></div>
+
+<div class="layer src"><div class="lbl">DATA<br>SOURCES</div><div class="cards">
+ <div class="card"><b>KRX</b><p>pykrx · 시세 · 종목 · OHLCV</p></div>
+ <div class="card"><b>Naver News</b><p>Open API · 금융/섹션 크롤링</p></div>
+ <div class="card"><b>언론사 RSS</b><p>feedparser · trafilatura</p></div>
+ <div class="card"><b>OpenDART</b><p>공시 원문 · 특수관계자</p></div>
+</div></div>
+<div class="down"><svg class="arw" width="24" height="26" viewBox="0 0 24 26"><path d="M12 2v19M6 15l6 6 6-6" fill="none" stroke="#8c959f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+<div class="layer job"><div class="lbl">BATCH<small>Celery Beat · 13 jobs<br>Redis broker</small></div><div class="cards">
+ <div class="card"><b>주가 수집</b><p>장중 60s 갱신<br>장 마감 종가 캐시</p></div>
+ <div class="card"><b>뉴스 파이프라인</b><p>수집 · 중복 제거<br>관련성 판별 · 분석</p></div>
+ <div class="card"><b>공시 · 관계</b><p>DART 색인 · 상관계수<br>LLM 관계 발굴</p></div>
+ <div class="card"><b>채점 · 보정</b><p>D+3 실제 주가 비교<br>Isotonic Regression</p></div>
+</div></div>
+<div class="down"><svg class="arw" width="24" height="26" viewBox="0 0 24 26"><path d="M12 2v19M6 15l6 6 6-6" fill="none" stroke="#8c959f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+<div class="layer ai"><div class="lbl">AI MODELS</div><div class="cards">
+ <div class="card local"><b>EXAONE 3.5 7.8B</b><p>뉴스 관련성 판별</p><span class="tag">Local · Ollama · RTX 4090</span></div>
+ <div class="harrow"><svg class="arw" width="22" height="22" viewBox="0 0 24 24"><path d="M3 12h16M13 6l6 6-6 6" fill="none" stroke="#8c959f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+ <div class="card api"><b>Claude Sonnet 4.6</b><p>통합 분석 · 관계 발굴</p><span class="tag">API · tool_use</span></div>
+ <div class="card api"><b>Claude Haiku 4.5</b><p>기사 요약 · 뉴스 랭킹</p><span class="tag">API</span></div>
+ <div class="card emb"><b>voyage-3</b><p>임베딩 · 중복 제거</p><span class="tag">Voyage AI</span></div>
+</div></div>
+<div class="down"><svg class="arw" width="24" height="26" viewBox="0 0 24 26"><path d="M12 2v19M6 15l6 6 6-6" fill="none" stroke="#8c959f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+<div class="layer store"><div class="lbl">STORAGE</div><div class="cards">
+ <div class="card" style="flex:1.4"><b>PostgreSQL 16 + pgvector</b><p>Supabase · 뉴스 · 인사이트 · 관계 엣지 · 예측 로그 · 벡터</p></div>
+ <div class="card"><b>Redis</b><p>TTL 차등 캐시 (60s ~ 24h)<br>관계 발굴 분산 락</p></div>
+</div></div>
+<div class="down"><svg class="arw" width="24" height="26" viewBox="0 0 24 26"><path d="M12 2v19M6 15l6 6 6-6" fill="none" stroke="#8c959f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+<div class="layer serve"><div class="lbl">SERVING</div><div class="cards">
+ <div class="card"><b>FastAPI</b><p>/search · /insight · /news · /relations</p></div>
+ <div class="harrow"><svg class="arw" width="22" height="22" viewBox="0 0 24 24"><path d="M3 12h16M13 6l6 6-6 6" fill="none" stroke="#8c959f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+ <div class="card"><b>React 18</b><p>Recharts 주가 차트 · D3 관계 그래프</p></div>
+ <div class="harrow"><svg class="arw" width="22" height="22" viewBox="0 0 24 24"><path d="M3 12h16M13 6l6 6-6 6" fill="none" stroke="#8c959f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+ <div class="card user" style="flex:.6"><b>User</b><p>종목 검색</p></div>
+</div></div>
+
+<div class="obs"><span class="h">OBSERVABILITY</span><span class="chip">Prometheus</span><span class="chip">Grafana</span><span class="chip">Loki</span><span class="chip">Sentry</span><span class="note">에이전트별 토큰 · 지연 · 할루시네이션율 추적</span></div>
+</div></body></html>
